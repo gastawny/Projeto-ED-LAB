@@ -32,6 +32,9 @@ typedef struct cabeca {
     Tfigurinha *fimFigRep;
 }Tcabeca;
 
+void inicializacao(Tcabeca **cabeca);
+void criaAlbum(Talbum **album);
+
 int main() {
     Tcabeca *cabeca=NULL;
     int op=1;
@@ -49,7 +52,7 @@ int main() {
         scanf("%d",&op);
 
         switch(op) {
-            case 1: break;
+            case 1: inicializacao(&cabeca);break;
             case 2: break;
             case 3: break;
             case 4: break;
@@ -62,4 +65,59 @@ int main() {
     }
 
     return 0;
+}
+
+void inicializacao(Tcabeca **cabeca) {
+    if(*cabeca) {
+        printf("\nAlbum ja foi inicializado\n");
+        return;
+    }
+    *cabeca = (Tcabeca*)malloc(sizeof(Tcabeca));
+    if(!*cabeca) {
+        printf("\nErro na alocacao\n");
+        return;
+    }
+    (*cabeca)->gastosFigRep = 0;
+    (*cabeca)->fimAlbum = (*cabeca)->inicioAlb = NULL;
+    (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL;
+    criaAlbum(&((*cabeca)->inicioAlb));
+}
+
+void criaAlbum(Talbum **album) {
+    *album = (Talbum*)malloc(sizeof(Talbum));
+    if(!*album) {
+        printf("\nErro na alocacao\n");
+        return;
+    }
+
+    FILE *selecoes = NULL;
+    selecoes = fopen("selecoes.txt","r");
+    if(!selecoes) {
+        printf("\nErro na abertura do arquivo\n");
+        return;
+    }
+
+    Talbum *aux = *album;
+    Tselecao *auxSelecao = NULL;
+    aux->inicioSel = aux->fimSel = NULL;
+    aux->proxAlb = NULL;
+    aux->gastos = 0;
+
+    while(!feof(selecoes)) {
+        if(!aux->inicioSel) {
+            aux->inicioSel = aux->fimSel = (Tselecao*)malloc(sizeof(Tselecao));
+            if(!aux->inicioSel) {
+                printf("\nErro na alocacao\n");
+                return;
+            }
+        }else{
+            Tselecao *novo = (Tselecao*)malloc(sizeof(Tselecao));
+            novo->proxSel = NULL;
+            aux->fimSel->proxSel = novo;
+            aux->fimSel = novo;
+        }
+        auxSelecao = aux->fimSel;
+        auxSelecao->fimFig = auxSelecao->inicioFig = NULL;
+        fscanf(selecoes,"%d%s",&(auxSelecao->codSelecao),auxSelecao->selecao);
+    }
 }
