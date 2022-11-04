@@ -12,6 +12,7 @@ struct Pessoa *prox;
 TPessoa *aloca(char nome[],int idade, int dose1, int dose2, char vacina[]);
 TPessoa* unificar(TPessoa *postoY, TPessoa *postoZ,TPessoa *postoFinal);
 TPessoa *pesquisa(TPessoa *lista, char nome[]);
+int NomeVacina(char vacina[]);
 void inserePessoa(TPessoa **p,char *nome, int idade, int dose1, int dose2, char *vacina );
 void atualizaValor(TPessoa *lista, char NomeAntigo[],int dose, int novoValor);
 void carregar(FILE *arq,TPessoa **pp);
@@ -149,7 +150,7 @@ int main()
 }
 TPessoa* unificar(TPessoa *postoY, TPessoa *postoZ, TPessoa *postoFinal)
 {
-	int flag =0;
+	int flag = 0;
 	TPessoa *postoInicio= postoY;
 	if(postoY)
 	{
@@ -230,27 +231,23 @@ void imprimeLista(TPessoa *p)
     char d1[4] = "Nao";
     char d2[4] = "Nao";
 	//assert(p);
-	if(p) //p!=NULL
+	if(p) //p!=NULL1
+
 	{
-/*Prefere assim --->>>*/		while(p!=NULL)
- /*Palavras*/                  {
-                                if(p->dose1==1)
-                                strcpy(d1, "Sim");
+	while(p!=NULL)
+	{
+					if(p->dose1==1)
+					strcpy(d1, "Sim");
 
-                                if(p->dose2==1)
-                                strcpy(d2, "Sim");
+					if(p->dose2==1)
+					strcpy(d2, "Sim");
 
-                                printf("\n%s  Idade:%d   1-Dose:%s  2-Dose:%s  %s\n",p->nome, p->idade ,d1 ,d2, p->vacina);
-                                p = p->prox;	
-                            }
-                            printf("\n");
+					printf("\n%10s  Idade:%3d  1-Dose:%3s   2-Dose:%3s  %s\n",p->nome, p->idade ,d1 ,d2, p->vacina);
+					p = p->prox;	
+				}
+				printf("\n");
         
-//ou prefere assim ---->>>>// while(p!=NULL)
-    /*Numeros*/         // {
-                        // 	printf("\n%s %d %d %d %s",p->nome, p->idade, p->dose1, p->dose2, p->vacina);
-                        // 	p = p->prox;	
-                        // }
-                        // printf("\n");
+
 	}
 	else
 		printf("\nLista vazia!");
@@ -260,7 +257,7 @@ void desaloca(TPessoa **p)
 {
 	TPessoa *aux;
 	if(*p==NULL) return; //if(!p)
-	aux = *p;//olha para o 1o
+	aux = *p;
 	*p = (*p)->prox;
 	free(aux);
 	aux=NULL;
@@ -296,15 +293,19 @@ void verificaVacina(TPessoa **lista, char Nome[]){
             printf("\nIdade: ");
 			scanf("%d",&idade);
             } while(idade<=0);
-            
+			printf("\n-----Informe o nome de uma vacina valida-----\n");
+            printf("\nAstraZeneca -  CoronaVac - Fiucruz\n Janssen - Pfizer - Sputnik");
+			do
+			{
 			printf("\nNome da vacina: ");
 			scanf("%s",&vacina);
+			}while(NomeVacina(vacina)==0);
 
 			printf("\n------Pessoa cadastrada com sucesso------\n");
 			printf("\nDeve tomar a primeira Dose\n");
             do
             { 
-                printf("\nConfirme se a vacina foi aplicada 1-Sim 2-Nao");
+                printf("\nConfirme se a vacina foi aplicada 1-Sim 2-Nao\n");
                 scanf("%d",&vac);
                 if(vac==1)
                 {
@@ -354,4 +355,38 @@ void criaArquivo(TPessoa * p)
     	fprintf(arquivofinal,"\n%s %d %d %d %s",p->nome, p->idade, p->dose1, p->dose2, p->vacina);
         p = p->prox;
     }
+}
+int NomeVacina(char vacina[])
+{
+	int cont=0;
+	if (strcmp(vacina,"AstraZeneca") == 0)
+	cont++;
+	else if (strcmp(vacina,"astrazeneca") == 0)
+	cont++;
+
+	else if (strcmp(vacina,"CoronaVac") == 0)
+	cont++;
+	else if (strcmp(vacina,"coronavac") == 0)
+	cont++;
+
+	else if(strcmp(vacina,"Fiucruz")== 0)
+    cont++;
+	else if(strcmp(vacina,"fiucruz")== 0)
+    cont++;
+
+	else if(strcmp(vacina,"Janssen")== 0)
+	cont++;
+	else if(strcmp(vacina,"janssen")== 0)
+	cont++;
+
+	else if(strcmp(vacina,"Pfizer")== 0)
+	cont++;
+	else if(strcmp(vacina,"pfizer")== 0)
+	cont++;
+
+	else if(strcmp(vacina,"Sputnik")== 0)
+	cont++;
+	else if(strcmp(vacina,"sputnik")== 0)
+	cont++;
+	return(cont);
 }
