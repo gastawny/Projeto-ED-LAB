@@ -36,6 +36,8 @@ void inicializacao(Tcabeca **cabeca);
 void criaAlbum(Tcabeca **cabeca);
 void entradaFigurinhas(Tcabeca **cabeca);
 void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha);
+void alocaFigRepNoAlbum(Tcabeca **cabeca);
+void insereAlbum(Tcabeca **cabeca);
 
 int main() {
     Tcabeca *cabeca=NULL;
@@ -55,7 +57,7 @@ int main() {
 
         switch(op) {
             case 1: inicializacao(&cabeca);break;
-            case 2: break;
+            case 2: insereAlbum(&cabeca);break;
             case 3: break;
             case 4: break;
             case 5: break;
@@ -136,13 +138,15 @@ void criaAlbum(Tcabeca **cabeca) {
         auxSelecao->inicioFig = NULL;
         fscanf(selecoes,"%d%s",&(auxSelecao->codSelecao),auxSelecao->selecao);
     }
-        fclose(selecoes);
+    fclose(selecoes);
+
+    if((*cabeca)->inicioAlb->proxAlb)
+        alocaFigRepNoAlbum(cabeca);
 }
 
 void entradaFigurinhas(Tcabeca **cabeca) {
     FILE *figurinhas_entrada = NULL;
     figurinhas_entrada = fopen("figurinhas_entrada.txt","r");
-    // figurinhas_entrada = fopen("asd.txt","r");
     if(!figurinhas_entrada) {
         printf("\nErro na abertura do arquivo\n");
         return;
@@ -151,7 +155,7 @@ void entradaFigurinhas(Tcabeca **cabeca) {
     int numTime, numJogador, FLAG;
     char time[20], jogador[20];
     Tselecao *selecao = NULL;
-    Tfigurinha *posFig = NULL, *aux;
+    Tfigurinha *aux;
 
     while(!feof(figurinhas_entrada)) {
         FLAG = 0;
@@ -169,9 +173,8 @@ void entradaFigurinhas(Tcabeca **cabeca) {
         figurinha->numJogador = numJogador;
         strcpy(figurinha->selecao,time);
         strcpy(figurinha->nome,jogador);
-        posFig = selecao->inicioFig;
 
-        if(!posFig) {
+        if(!selecao->inicioFig) {
             figurinha->proxFig = NULL;
             selecao->inicioFig = figurinha;
         } else if(figurinha->numJogador < selecao->inicioFig->numJogador) {
@@ -210,10 +213,94 @@ void entradaFigurinhas(Tcabeca **cabeca) {
 }
 
 void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha) {
-    if(!(*cabeca)->inicioFigRep)
+    if(!(*cabeca)->inicioFigRep) {
+        figurinha->proxFig = NULL;
         (*cabeca)->inicioFigRep = (*cabeca)->fimFigRep = figurinha;
+    }
     else {
         figurinha->proxFig = NULL;
+        (*cabeca)->fimFigRep->proxFig = figurinha;
         (*cabeca)->fimFigRep = figurinha;
     }
+}
+
+void alocaFigRepNoAlbum(Tcabeca **cabeca) {
+    int FLAG, count=0;
+    Tfigurinha *figRep = (*cabeca)->inicioFigRep, *aux, *proxFig = figRep, *lista = NULL, *auxLista, *fimlista;
+    Tselecao *selecao;
+    while(proxFig) {
+        FLAG = 0;
+        proxFig = proxFig->proxFig;
+        selecao = (*cabeca)->fimAlbum->inicioSel;
+
+        while(figRep->codSelecao != selecao->codSelecao)
+            selecao = selecao->proxSel;
+
+        if(!selecao->inicioFig) {
+            figRep->proxFig = NULL;
+            selecao->inicioFig = figRep;
+        } else if(figRep->numJogador < selecao->inicioFig->numJogador) {
+            figRep->proxFig = selecao->inicioFig;
+            selecao->inicioFig = figRep;
+        } else if(figRep->numJogador == selecao->inicioFig->numJogador)
+            FLAG = 3;
+        else {
+            aux = selecao->inicioFig;
+            if(!aux->proxFig)
+                FLAG = 1;
+            else
+                while(aux->proxFig && figRep->numJogador > aux->proxFig->numJogador && figRep->numJogador != aux->proxFig->numJogador) {
+                    if(!aux->proxFig->proxFig) {
+                        FLAG = 2;
+                        break;
+                    }
+                    aux = aux->proxFig;
+                }
+            if(FLAG == 1) {
+                figRep->proxFig = aux->proxFig;
+                aux->proxFig = figRep;
+            } else if(FLAG == 2) {
+                figRep->proxFig = aux->proxFig->proxFig;
+                aux->proxFig->proxFig = figRep;
+            } else if(figRep->numJogador == aux->proxFig->numJogador)
+                continue;
+            else {
+                figRep->proxFig = aux->proxFig;
+                aux->proxFig = figRep;
+            }
+        }
+
+        if(FLAG == 3) {
+            fimlista = figRep;
+            count++;
+            if(!lista) {
+                lista = figRep;
+                figRep->proxFig = NULL;
+            } else {
+                auxLista = lista;
+                lista = figRep;
+                figRep->proxFig = auxLista;
+            }
+        }
+
+        if(!proxFig) {
+            (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL; 
+            if(count) {
+                (*cabeca)->inicioFigRep = lista;
+                (*cabeca)->fimFigRep = fimlista;
+                return;
+            };
+            break;
+        }
+        figRep = proxFig;
+        (*cabeca)->inicioFigRep = proxFig;
+    }
+}
+
+void insereAlbum(Tcabeca **cabeca) {
+    if(!*cabeca) {
+        printf("\nPrograma nao inicializado\n");
+        return;
+    }
+    criaAlbum(cabeca);
 }
