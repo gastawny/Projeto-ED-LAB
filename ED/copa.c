@@ -18,6 +18,7 @@ typedef struct selecao {
 }Tselecao;
 
 typedef struct album {
+    int codAlbum;
     float gastos;
     Tselecao *inicioSel;
     Tselecao *fimSel;
@@ -27,9 +28,10 @@ typedef struct album {
 typedef struct cabeca {
     Talbum *inicioAlb;
     Talbum *fimAlbum;
-    float gastosFigRep;
+    float gastosFigRep, lucro;
     Tfigurinha *inicioFigRep;
     Tfigurinha *fimFigRep;
+    int qtdAlbuns;
 }Tcabeca;
 
 void inicializacao(Tcabeca **cabeca);
@@ -38,10 +40,13 @@ void entradaFigurinhas(Tcabeca **cabeca);
 void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha);
 void alocaFigRepNoAlbum(Tcabeca **cabeca);
 void insereAlbum(Tcabeca **cabeca);
+void venderAlbum(Tcabeca *cabeca);
+void desalocaAlbum(Tcabeca *cabeca, int k);
+void desalocaSelecao(Tselecao *selecao);
 
 int main() {
-    Tcabeca *cabeca=NULL;
-    int op=1;
+    Tcabeca *cabeca = NULL;
+    int op = 1;
 
     while(op) {
         printf("\nDigite:\n1 - Inicializacao\n"
@@ -59,7 +64,7 @@ int main() {
             case 1: inicializacao(&cabeca);break;
             case 2: insereAlbum(&cabeca);break;
             case 3: break;
-            case 4: break;
+            case 4: venderAlbum(cabeca);break;
             case 5: break;
             case 6: break;
             case 7: break;
@@ -81,10 +86,11 @@ void inicializacao(Tcabeca **cabeca) {
         printf("\nErro na alocacao\n");
         return;
     }
-    (*cabeca)->gastosFigRep = 0;
+    (*cabeca)->gastosFigRep = (*cabeca)->lucro = (*cabeca)->qtdAlbuns = 0;
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb = NULL;
     (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL;
     criaAlbum(cabeca);
+    (*cabeca)->inicioAlb->codAlbum = 1;
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb;
     entradaFigurinhas(cabeca);
 }
@@ -140,8 +146,17 @@ void criaAlbum(Tcabeca **cabeca) {
     }
     fclose(selecoes);
 
-    if((*cabeca)->inicioAlb->proxAlb)
+    if((*cabeca)->inicioAlb->proxAlb) {
+        aux = (*cabeca)->inicioAlb;
+        while(aux->proxAlb != (*cabeca)->fimAlbum)
+            aux = aux->proxAlb;
+        (*cabeca)->fimAlbum->codAlbum = aux->codAlbum + 1;
         alocaFigRepNoAlbum(cabeca);
+    }
+    
+    (*cabeca)->qtdAlbuns++;
+
+    
 }
 
 void entradaFigurinhas(Tcabeca **cabeca) {
@@ -303,4 +318,70 @@ void insereAlbum(Tcabeca **cabeca) {
         return;
     }
     criaAlbum(cabeca);
+}
+
+void venderAlbum(Tcabeca *cabeca) {
+    if(!cabeca) {
+        printf("\nPrograma nao inicializado\n");
+        return;
+    }
+    if(!cabeca->inicioAlb) {
+        printf("\nNao existe album para vender\n");
+        return;
+    }
+    int k;
+    Talbum *album;
+    do{
+        album = cabeca->inicioAlb;
+        printf("\nDigite qual album deseja vender: (Aperte -1 para voltar)\n");
+        for(int i=1;i<=cabeca->qtdAlbuns;i++,album=album->proxAlb)
+            printf("\t%d  -  Album %d\n",i,album->codAlbum);
+        scanf("%d",&k);
+        if(k==-1) return;
+    }while(k<1 || k>cabeca->qtdAlbuns);
+    desalocaAlbum(cabeca, k);
+}
+
+void desalocaAlbum(Tcabeca *cabeca, int k) {
+    Talbum *album = cabeca->inicioAlb, *auxAlb;
+    k--;
+    while(k) {
+        album = album->proxAlb;
+        k--;
+    }
+    Tselecao *selecao = album->inicioSel, *auxSel;
+    while(selecao) {
+        auxSel = selecao;
+        selecao = selecao->proxSel;
+        desalocaSelecao(auxSel);
+        free(auxSel);
+        album->inicioSel = selecao;
+    }
+    album->fimSel = album->inicioSel;
+    cabeca->lucro = album->gastos;
+
+    if(cabeca->inicioAlb == album)  {
+        cabeca->inicioAlb = album->proxAlb;
+        if(cabeca->inicioAlb == cabeca->fimAlbum)
+            cabeca->fimAlbum = album->proxAlb;
+    } else {
+        auxAlb = cabeca->inicioAlb;
+        while(auxAlb->proxAlb != album)
+            auxAlb = auxAlb->proxAlb;
+        if(album == cabeca->fimAlbum)
+            cabeca->fimAlbum = auxAlb;
+        auxAlb->proxAlb = album->proxAlb;
+    }
+    free(album);
+    cabeca->qtdAlbuns--;
+}
+
+void desalocaSelecao(Tselecao *selecao) {
+    Tfigurinha *figurinha = selecao->inicioFig, *aux;
+    while(figurinha) {
+        aux = figurinha;
+        figurinha = figurinha->proxFig;
+        free(aux);
+        selecao->inicioFig = figurinha;
+    }
 }
