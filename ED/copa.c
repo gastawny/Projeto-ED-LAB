@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<math.h>
 
 typedef struct figurinha {
     int codSelecao;
@@ -19,7 +20,7 @@ typedef struct selecao {
 
 typedef struct album {
     int codAlbum;
-    float gastos;
+    double gastos;
     Tselecao *inicioSel;
     Tselecao *fimSel;
     struct album *proxAlb;
@@ -28,7 +29,7 @@ typedef struct album {
 typedef struct cabeca {
     Talbum *inicioAlb;
     Talbum *fimAlbum;
-    float gastosFigRep, lucro;
+    double gastosFigRep, lucro;
     Tfigurinha *inicioFigRep;
     Tfigurinha *fimFigRep;
     int qtdAlbuns;
@@ -121,7 +122,7 @@ void criaAlbum(Tcabeca **cabeca) {
         (*cabeca)->fimAlbum = album;
         aux->proxAlb = NULL;
     }
-    aux->gastos = 0;
+    aux->gastos = 12;
 
     while(!feof(selecoes)) {
         if(!aux->inicioSel) {
@@ -197,6 +198,7 @@ void entradaFigurinhas(Tcabeca **cabeca) {
             selecao->inicioFig = figurinha;
         } else if(figurinha->numJogador == selecao->inicioFig->numJogador) {
             insereFigRep(cabeca,figurinha);
+            FLAG = 3;
         } else {
             aux = selecao->inicioFig;
             if(!aux->proxFig)
@@ -215,14 +217,17 @@ void entradaFigurinhas(Tcabeca **cabeca) {
             } else if(FLAG == 2) {
                 figurinha->proxFig = aux->proxFig->proxFig;
                 aux->proxFig->proxFig = figurinha;
-            } else if(figurinha->numJogador == aux->proxFig->numJogador)
+            } else if(figurinha->numJogador == aux->proxFig->numJogador) {
                 insereFigRep(cabeca,figurinha);
+                FLAG = 3;
+            }
             else {
                 figurinha->proxFig = aux->proxFig;
                 aux->proxFig = figurinha;
             }
         }
-        
+        if(FLAG != 3)
+            (*cabeca)->inicioAlb->gastos += 0.8;
     }
     fclose(figurinhas_entrada);
 }
@@ -231,16 +236,16 @@ void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha) {
     if(!(*cabeca)->inicioFigRep) {
         figurinha->proxFig = NULL;
         (*cabeca)->inicioFigRep = (*cabeca)->fimFigRep = figurinha;
-    }
-    else {
+    } else {
         figurinha->proxFig = NULL;
         (*cabeca)->fimFigRep->proxFig = figurinha;
         (*cabeca)->fimFigRep = figurinha;
     }
+    (*cabeca)->gastosFigRep += 0.8;
 }
 
 void alocaFigRepNoAlbum(Tcabeca **cabeca) {
-    int FLAG, count=0;
+    int FLAG, count = 0;
     Tfigurinha *figRep = (*cabeca)->inicioFigRep, *aux, *proxFig = figRep, *lista = NULL, *auxLista, *fimlista;
     Tselecao *selecao;
     while(proxFig) {
@@ -287,7 +292,7 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
 
         if(FLAG == 3) {
             fimlista = figRep;
-            count++;
+            count = 1;
             if(!lista) {
                 lista = figRep;
                 figRep->proxFig = NULL;
@@ -296,6 +301,9 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
                 lista = figRep;
                 figRep->proxFig = auxLista;
             }
+        } else {
+            (*cabeca)->gastosFigRep -= 0.8;
+            (*cabeca)->fimAlbum->gastos += 0.8;
         }
 
         if(!proxFig) {
