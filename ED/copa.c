@@ -44,6 +44,9 @@ void insereAlbum(Tcabeca **cabeca);
 void venderAlbum(Tcabeca *cabeca);
 void desalocaAlbum(Tcabeca *cabeca, int k);
 void desalocaSelecao(Tselecao *selecao);
+void venderFigurinhasRepetidas(Tcabeca *cabeca);
+void relatorioDeGastos(Tcabeca *cabeca);
+void relatorioDeLucros(Tcabeca *cabeca);
 
 int main() {
     Tcabeca *cabeca = NULL;
@@ -66,9 +69,9 @@ int main() {
             case 2: insereAlbum(&cabeca);break;
             case 3: break;
             case 4: venderAlbum(cabeca);break;
-            case 5: break;
-            case 6: break;
-            case 7: break;
+            case 5: venderFigurinhasRepetidas(cabeca);break;
+            case 6: relatorioDeGastos(cabeca);break;
+            case 7: relatorioDeLucros(cabeca);break;
             case 8: op=0;break;
             default: printf("\nDigite uma opcao valida\n");
         }
@@ -392,4 +395,41 @@ void desalocaSelecao(Tselecao *selecao) {
         free(aux);
         selecao->inicioFig = figurinha;
     }
+}
+
+void venderFigurinhasRepetidas(Tcabeca *cabeca) {
+    if(!cabeca) {
+        printf("\nPrograma nao inicializado\n");
+        return;
+    }
+    Tfigurinha *figurinha = cabeca->inicioFigRep, *aux;
+    while(figurinha) {
+        aux = figurinha;
+        figurinha = figurinha->proxFig;
+        free(aux);
+        cabeca->inicioFigRep = figurinha;
+        cabeca->lucro += 0.8;
+        cabeca->gastosFigRep -= 0.8;
+    }
+    cabeca->fimFigRep = NULL;
+}
+
+void relatorioDeGastos(Tcabeca *cabeca) {
+    if(!cabeca) {
+        printf("\nPrograma nao inicializado\n");
+        return;
+    }
+    Talbum *album = cabeca->inicioAlb;
+    printf("\nRelatorio de gastos:\n");
+    for(int i=0;i<cabeca->qtdAlbuns;i++,album=album->proxAlb)
+        printf("Album %d: R$ %.2f\n",album->codAlbum,album->gastos);
+    printf("Figurinhas Repetidas: R$ %.2f\n",cabeca->gastosFigRep);
+}
+
+void relatorioDeLucros(Tcabeca *cabeca) {
+    if(!cabeca) {
+        printf("\nPrograma nao inicializado\n");
+        return;
+    }
+    printf("\nLucro: R$ %.2f\n",cabeca->lucro);
 }
