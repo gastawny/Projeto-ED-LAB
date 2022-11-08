@@ -1,7 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include<math.h>
 
 typedef struct figurinha {
     int codSelecao;
@@ -47,6 +46,8 @@ void desalocaSelecao(Tselecao *selecao);
 void venderFigurinhasRepetidas(Tcabeca *cabeca);
 void relatorioDeGastos(Tcabeca *cabeca);
 void relatorioDeLucros(Tcabeca *cabeca);
+void sair(Tcabeca **cabeca, int *op);
+void imprimeAlbum(Talbum *album, FILE *file);
 
 int main() {
     Tcabeca *cabeca = NULL;
@@ -72,7 +73,7 @@ int main() {
             case 5: venderFigurinhasRepetidas(cabeca);break;
             case 6: relatorioDeGastos(cabeca);break;
             case 7: relatorioDeLucros(cabeca);break;
-            case 8: op=0;break;
+            case 8: sair(&cabeca,&op);break;
             default: printf("\nDigite uma opcao valida\n");
         }
     }
@@ -432,4 +433,68 @@ void relatorioDeLucros(Tcabeca *cabeca) {
         return;
     }
     printf("\nLucro: R$ %.2f\n",cabeca->lucro);
+}
+
+void sair(Tcabeca **cabeca, int *op) {
+    *op = 0;
+    if(!*cabeca) return;
+    float despesas = (*cabeca)->gastosFigRep;
+    int cod, asciiTable = 48;
+    char nomAlbum[20], aux[10] = "Album_", aux2[2];
+    Talbum *album = (*cabeca)->inicioAlb;
+    FILE *file = NULL;
+
+    while(album) {
+        cod = album->codAlbum;
+        *aux2 = cod + asciiTable;
+        *(aux2+1) = '\0';
+        strcpy(nomAlbum,aux);
+        strcat(nomAlbum,aux2);
+        strcat(nomAlbum,".txt");
+        file = fopen(nomAlbum,"w");
+        if(!file) {
+        printf("\nErro ao criar o arquivo");
+        return;
+        }
+        imprimeAlbum(album,file);
+        despesas += album->gastos;
+        album = album->proxAlb;
+        fclose(file);
+    }
+
+    file = fopen("lucros_e_despesas.txt","w");
+    if(!file) {
+        printf("\nErro ao criar o arquivo");
+        return;
+    }
+    fprintf(file,"Lucros: R$ %.2f\n\nDespesas: R$ %.2f",(*cabeca)->lucro,despesas);
+    fclose(file);
+
+    file = fopen("figurinhas_repetidas.txt","w");
+    if(!file) {
+        printf("\nErro ao criar o arquivo");
+        return;
+    }
+    fprintf(file,"Figurinhas Repetidas:\n");
+    for(Tfigurinha *figRep = (*cabeca)->inicioFigRep;figRep;figRep = figRep->proxFig)
+        fprintf(file,"\n%d %s %d %s",figRep->codSelecao, figRep->selecao, figRep->numJogador, figRep->nome);
+    fclose(file);
+
+    for(int i=1;i<=(*cabeca)->qtdAlbuns;i++)
+        desalocaAlbum(*cabeca,i);
+
+    venderFigurinhasRepetidas(*cabeca);
+    free(*cabeca);
+    *cabeca = NULL;
+}
+
+void imprimeAlbum(Talbum *album, FILE *file) {
+    Tselecao *selecao = album->inicioSel;
+    Tfigurinha *fig;
+    fprintf(file,"Album %d:\n",album->codAlbum);
+    while(selecao) {
+        for(fig = selecao->inicioFig; fig; fig = fig->proxFig)
+            fprintf(file,"\n%d %s %d %s",fig->codSelecao, fig->selecao, fig->numJogador, fig->nome);
+        selecao = selecao->proxSel;
+    }
 }
