@@ -37,7 +37,7 @@ typedef struct cabeca {
 void inicializacao(Tcabeca **cabeca);
 void criaAlbum(Tcabeca **cabeca);
 void entradaFigurinhas(Tcabeca **cabeca);
-void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha);
+void insereFigRep(Tcabeca *cabeca, Tfigurinha *figurinha);
 void alocaFigRepNoAlbum(Tcabeca **cabeca);
 void insereAlbum(Tcabeca **cabeca);
 void venderAlbum(Tcabeca *cabeca);
@@ -48,6 +48,7 @@ void relatorioDeGastos(Tcabeca *cabeca);
 void relatorioDeLucros(Tcabeca *cabeca);
 void sair(Tcabeca **cabeca, int *op);
 void imprimeAlbum(Talbum *album, FILE *file);
+void comprarPacote(Tcabeca *cabeca);
 
 int main() {
     Tcabeca *cabeca = NULL;
@@ -68,7 +69,7 @@ int main() {
         switch(op) {
             case 1: inicializacao(&cabeca);break;
             case 2: insereAlbum(&cabeca);break;
-            case 3: break;
+            case 3: comprarPacote(cabeca);break;
             case 4: venderAlbum(cabeca);break;
             case 5: venderFigurinhasRepetidas(cabeca);break;
             case 6: relatorioDeGastos(cabeca);break;
@@ -201,7 +202,7 @@ void entradaFigurinhas(Tcabeca **cabeca) {
             figurinha->proxFig = selecao->inicioFig;
             selecao->inicioFig = figurinha;
         } else if(figurinha->numJogador == selecao->inicioFig->numJogador) {
-            insereFigRep(cabeca,figurinha);
+            insereFigRep(*cabeca,figurinha);
             FLAG = 3;
         } else {
             aux = selecao->inicioFig;
@@ -222,7 +223,7 @@ void entradaFigurinhas(Tcabeca **cabeca) {
                 figurinha->proxFig = aux->proxFig->proxFig;
                 aux->proxFig->proxFig = figurinha;
             } else if(figurinha->numJogador == aux->proxFig->numJogador) {
-                insereFigRep(cabeca,figurinha);
+                insereFigRep(*cabeca,figurinha);
                 FLAG = 3;
             }
             else {
@@ -236,16 +237,16 @@ void entradaFigurinhas(Tcabeca **cabeca) {
     fclose(figurinhas_entrada);
 }
 
-void insereFigRep(Tcabeca **cabeca, Tfigurinha *figurinha) {
-    if(!(*cabeca)->inicioFigRep) {
+void insereFigRep(Tcabeca *cabeca, Tfigurinha *figurinha) {
+    if(!cabeca->inicioFigRep) {
         figurinha->proxFig = NULL;
-        (*cabeca)->inicioFigRep = (*cabeca)->fimFigRep = figurinha;
+        cabeca->inicioFigRep = cabeca->fimFigRep = figurinha;
     } else {
         figurinha->proxFig = NULL;
-        (*cabeca)->fimFigRep->proxFig = figurinha;
-        (*cabeca)->fimFigRep = figurinha;
+        cabeca->fimFigRep->proxFig = figurinha;
+        cabeca->fimFigRep = figurinha;
     }
-    (*cabeca)->gastosFigRep += 0.8;
+    cabeca->gastosFigRep += 0.8;
 }
 
 void alocaFigRepNoAlbum(Tcabeca **cabeca) {
@@ -496,5 +497,84 @@ void imprimeAlbum(Talbum *album, FILE *file) {
         for(fig = selecao->inicioFig; fig; fig = fig->proxFig)
             fprintf(file,"\n%d %s %d %s",fig->codSelecao, fig->selecao, fig->numJogador, fig->nome);
         selecao = selecao->proxSel;
+    }
+}
+
+void comprarPacote(Tcabeca *cabeca) {
+    Talbum *album = cabeca->inicioAlb;
+    Tselecao *selecao;
+    Tfigurinha *figurinha, *aux;
+    int numSelecao, numJogador, extra, auxSelecao, auxJogador, FLAG;
+    char nomeSelecao[20], jogador[20];
+    FILE *figurinhas_total = NULL;
+    figurinhas_total = fopen("figurinhas_total.txt","r");
+    if(!figurinhas_total) {
+        printf("\nErro na abertura do arquivo\n");
+        return;
+    }
+    for(int i=0;i<5;i++) {
+        rewind(figurinhas_total);
+        numSelecao = rand() % 20 + 1;
+        numJogador = rand() % 19 + 1;
+        auxSelecao = auxJogador = 0;
+        while(numSelecao  != auxSelecao)
+            fscanf(figurinhas_total,"%d%d%s",&auxSelecao,&auxJogador,jogador);
+        while(numJogador != auxJogador)
+            fscanf(figurinhas_total,"%d%d%s",&auxSelecao,&auxJogador,jogador);
+
+        figurinha = (Tfigurinha*)malloc(sizeof(Tfigurinha));
+        if(!figurinha) {
+            printf("\nErro na alocacao\n");
+            return;
+        }
+        figurinha->codSelecao = auxSelecao;
+        figurinha->numJogador = auxJogador;
+        strcpy(figurinha->nome,jogador);
+
+        for(album=cabeca->inicioAlb,FLAG=0;album;album=album->proxAlb) {
+            selecao = album->inicioSel;
+            while(selecao->codSelecao != numSelecao)
+                selecao = selecao->proxSel;
+            strcpy(figurinha->selecao,selecao->selecao);
+            if(!selecao->inicioFig) {
+                figurinha->proxFig = NULL;
+                selecao->inicioFig = figurinha;
+            } else if(figurinha->numJogador < selecao->inicioFig->numJogador) {
+                figurinha->proxFig = selecao->inicioFig;
+                selecao->inicioFig = figurinha;
+            } else if(figurinha->numJogador == selecao->inicioFig->numJogador) {
+                insereFigRep(cabeca,figurinha);
+                FLAG = 3;
+            } else {
+                aux = selecao->inicioFig;
+                if(!aux->proxFig)
+                    FLAG = 1;
+                else
+                    while(aux->proxFig && figurinha->numJogador > aux->proxFig->numJogador && figurinha->numJogador != aux->proxFig->numJogador) {
+                        if(!aux->proxFig->proxFig) {
+                            FLAG = 2;
+                            break;
+                        }
+                        aux = aux->proxFig;
+                    }
+                if(FLAG == 1) {
+                    figurinha->proxFig = aux->proxFig;
+                    aux->proxFig = figurinha;
+                } else if(FLAG == 2) {
+                    figurinha->proxFig = aux->proxFig->proxFig;
+                    aux->proxFig->proxFig = figurinha;
+                } else if(figurinha->numJogador == aux->proxFig->numJogador) {
+                    insereFigRep(cabeca,figurinha);
+                    FLAG = 3;
+                }
+                else {
+                    figurinha->proxFig = aux->proxFig;
+                    aux->proxFig = figurinha;
+                }
+            }
+            if(FLAG != 3)
+                album->gastos += 0.8;
+            
+        }
     }
 }
