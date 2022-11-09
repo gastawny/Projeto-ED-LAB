@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<time.h>
 
 typedef struct figurinha {
     int codSelecao;
@@ -373,11 +374,13 @@ void desalocaAlbum(Tcabeca *cabeca, int k) {
     album->fimSel = album->inicioSel;
     cabeca->lucro = album->gastos;
 
-    if(cabeca->inicioAlb == album)  {
-        cabeca->inicioAlb = album->proxAlb;
+    if(cabeca->inicioAlb == album) {
         if(cabeca->inicioAlb == cabeca->fimAlbum)
-            cabeca->fimAlbum = album->proxAlb;
-    } else {
+            cabeca->fimAlbum = album->proxAlb = cabeca->inicioAlb = NULL;
+        else
+            cabeca->inicioAlb = album->proxAlb;
+    }
+    else {
         auxAlb = cabeca->inicioAlb;
         while(auxAlb->proxAlb != album)
             auxAlb = auxAlb->proxAlb;
@@ -468,7 +471,7 @@ void sair(Tcabeca **cabeca, int *op) {
         printf("\nErro ao criar o arquivo");
         return;
     }
-    fprintf(file,"Lucros: R$ %.2f\n\nDespesas: R$ %.2f",(*cabeca)->lucro,despesas);
+    fprintf(file,"Lucros: R$ %.2lf\n\nDespesas: R$ %.2lf",(*cabeca)->lucro,despesas);
     fclose(file);
 
     file = fopen("figurinhas_repetidas.txt","w");
@@ -481,7 +484,7 @@ void sair(Tcabeca **cabeca, int *op) {
         fprintf(file,"\n%d %s %d %s",figRep->codSelecao, figRep->selecao, figRep->numJogador, figRep->nome);
     fclose(file);
 
-    for(int i=1;i<=(*cabeca)->qtdAlbuns;i++)
+    for(int i=(*cabeca)->qtdAlbuns;i>0;i--)
         desalocaAlbum(*cabeca,i);
 
     venderFigurinhasRepetidas(*cabeca);
@@ -501,6 +504,7 @@ void imprimeAlbum(Talbum *album, FILE *file) {
 }
 
 void comprarPacote(Tcabeca *cabeca) {
+    srand(time(NULL));
     Talbum *album = cabeca->inicioAlb;
     Tselecao *selecao;
     Tfigurinha *figurinha, *aux;
@@ -531,6 +535,8 @@ void comprarPacote(Tcabeca *cabeca) {
         figurinha->numJogador = auxJogador;
         strcpy(figurinha->nome,jogador);
 
+        if(!cabeca->inicioAlb)
+            insereFigRep(cabeca,figurinha);
         for(album=cabeca->inicioAlb,FLAG=0;album;album=album->proxAlb) {
             selecao = album->inicioSel;
             while(selecao->codSelecao != numSelecao)
