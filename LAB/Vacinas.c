@@ -13,6 +13,7 @@ TPessoa *aloca(char nome[],int idade, int dose1, int dose2, char vacina[]);
 TPessoa* unificar(TPessoa *postoY, TPessoa *postoZ,TPessoa *postoFinal);
 TPessoa *pesquisa(TPessoa *lista, char nome[]);
 int NomeVacina(char vacina[]);
+char* strlwr1(char s[]);
 void learquivo(char arquivo[]);
 void inserePessoa(TPessoa **p,char *nome, int idade, int dose1, int dose2, char *vacina );
 void atualizaValor(TPessoa *lista, char NomeAntigo[],int dose, int novoValor);
@@ -75,7 +76,7 @@ int main()
 			case 2: 
 			{
                 printf("\nInforme o nome de deseja consultar: ");
-            	scanf("%s",&ConsultaNome);
+            	scanf("%s",ConsultaNome);
 				verificaVacina(&postoFinal1, ConsultaNome);    
 			}break;
 
@@ -280,7 +281,7 @@ void verificaVacina(TPessoa **lista, char Nome[]){
 			do
 			{
 				printf("\nNome da vacina: ");
-				scanf("%s",&vacina);
+				scanf("%s",vacina);
 			}while(NomeVacina(vacina)==0);
 
 			printf("\n------Pessoa cadastrada com sucesso------\n");
@@ -338,17 +339,17 @@ void criaArquivo(TPessoa * p)
 int NomeVacina(char vacina[])
 {
 	int cont=0;
-	if(strcmp(strlwr(vacina),"astrazeneca") == 0)
+	if(strcmp(strlwr1(vacina),"astrazeneca") == 0)
 		cont++;
-	else if(strcmp(strlwr(vacina),"coronavac") == 0)
+	else if(strcmp(strlwr1(vacina),"coronavac") == 0)
 		cont++;
-	else if(strcmp(strlwr(vacina),"fiucruz")== 0)
+	else if(strcmp(strlwr1(vacina),"fiucruz")== 0)
     	cont++;
-	else if(strcmp(strlwr(vacina),"janssen")== 0)
+	else if(strcmp(strlwr1(vacina),"janssen")== 0)
 		cont++;
-	else if(strcmp(strlwr(vacina),"pfizer")== 0)
+	else if(strcmp(strlwr1(vacina),"pfizer")== 0)
 		cont++;
-	else if(strcmp(strlwr(vacina),"sputnik")== 0)
+	else if(strcmp(strlwr1(vacina),"sputnik")== 0)
 		cont++;
 	return(cont);
 }
@@ -377,4 +378,14 @@ void learquivo(char arquivo[])
 			printf("\n%10s  Idade:%3d  1-Dose:%3s   2-Dose:%3s  %s\n",nome, idade ,d1 ,d2, vacina);
 	}
 	printf("\n");
+}
+
+char* strlwr1(char s[])
+{
+	for(int i=0;i<strlen(s);i++)
+	{
+		if((int)s[i]>=65 && (int)s[i]<= 90)
+		s[i]=(int)s[i]+32;
+	}
+	return s;
 }
