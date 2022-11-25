@@ -84,7 +84,7 @@ int main() {
 
     return 0;
 }
-
+// inicializa o programa, criando um album e inserindo as figurinhas do arquivo
 void inicializacao(Tcabeca **cabeca) {
     if(*cabeca) {
         exibe("O programa ja foi inicializado");
@@ -95,6 +95,7 @@ void inicializacao(Tcabeca **cabeca) {
         exibe("Erro na alocacao");
         return;
     }
+    // inicializa a cabeca
     (*cabeca)->gastosFigRep = (*cabeca)->lucro = (*cabeca)->qtdAlbuns = 0;
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb = NULL;
     (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL;
@@ -104,7 +105,7 @@ void inicializacao(Tcabeca **cabeca) {
     entradaFigurinhas(cabeca);
     exibe("Programa inicializado");
 }
-
+// cria um album novo
 void criaAlbum(Tcabeca **cabeca) {
     Talbum *album = (Talbum*)malloc(sizeof(Talbum));
     if(!album) {
@@ -132,7 +133,7 @@ void criaAlbum(Tcabeca **cabeca) {
         aux->proxAlb = NULL;
     }
     aux->gastos = 12;
-
+    // insere as selecoes no album
     while(!feof(selecoes)) {
         if(!aux->inicioSel) {
             aux->inicioSel = aux->fimSel = (Tselecao*)malloc(sizeof(Tselecao));
@@ -155,7 +156,7 @@ void criaAlbum(Tcabeca **cabeca) {
         fscanf(selecoes,"%d%s",&(auxSelecao->codSelecao),auxSelecao->selecao);
     }
     fclose(selecoes);
-
+    // insere possiveis figurinhas repetidas no novo album
     if((*cabeca)->inicioAlb->proxAlb) {
         aux = (*cabeca)->inicioAlb;
         while(aux->proxAlb != (*cabeca)->fimAlbum)
@@ -166,7 +167,7 @@ void criaAlbum(Tcabeca **cabeca) {
     
     (*cabeca)->qtdAlbuns++;
 }
-
+// para ler as figurinhas do arquivo <figurinhas_entrada.txt>
 void entradaFigurinhas(Tcabeca **cabeca) {
     FILE *figurinhas_entrada = NULL;
     figurinhas_entrada = fopen("figurinhas_entrada.txt","r");
@@ -177,14 +178,14 @@ void entradaFigurinhas(Tcabeca **cabeca) {
 
     int numTime, numJogador;
     char spam[20];
-
+    // pega as informacoes do arquivo e insere no album
     while(!feof(figurinhas_entrada)) {
         fscanf(figurinhas_entrada,"%d%s%d%s",&numTime,spam,&numJogador,spam);
         insereFig(*cabeca, numTime, numJogador, 0);
     }
     fclose(figurinhas_entrada);
 }
-
+// insere figurinhas na lista de repetidas
 void insereFigRep(Tcabeca *cabeca, Tfigurinha *figurinha) {
     if(!cabeca->inicioFigRep) {
         figurinha->proxFig = NULL;
@@ -196,7 +197,7 @@ void insereFigRep(Tcabeca *cabeca, Tfigurinha *figurinha) {
     }
     cabeca->gastosFigRep += 0.8;
 }
-
+// transefere da lista de repetidas para um album
 void alocaFigRepNoAlbum(Tcabeca **cabeca) {
     int FLAG, count = 0;
     Tfigurinha *figRep = (*cabeca)->inicioFigRep, *aux, *proxFig = figRep, *lista = NULL, *auxLista, *fimlista;
@@ -205,10 +206,10 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
         FLAG = 0;
         proxFig = proxFig->proxFig;
         selecao = (*cabeca)->fimAlbum->inicioSel;
-
+    // encontra a selecao da figurinha
         while(figRep->codSelecao != selecao->codSelecao)
             selecao = selecao->proxSel;
-
+    // insere de maneira ordenada a figurinha dentro da selecao
         if(!selecao->inicioFig) {
             figRep->proxFig = NULL;
             selecao->inicioFig = figRep;
@@ -242,7 +243,7 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
                 aux->proxFig = figRep;
             }
         }
-
+    // cria uma nova lista para as figurinhas que nao foram inseridas nos albuns
         if(FLAG == 3) {
             fimlista = figRep;
             count = 1;
@@ -258,7 +259,7 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
             (*cabeca)->gastosFigRep -= 0.8;
             (*cabeca)->fimAlbum->gastos += 0.8;
         }
-
+    // atualiza os ponteiros da cabeca para essa nova lista de repetidas
         if(!proxFig) {
             (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL; 
             if(count) {
@@ -272,7 +273,7 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
         (*cabeca)->inicioFigRep = proxFig;
     }
 }
-
+// chamada na main que ira criar um novo album
 void insereAlbum(Tcabeca **cabeca) {
     if(!*cabeca) {
         exibe("Programa nao inicializado");
@@ -281,7 +282,7 @@ void insereAlbum(Tcabeca **cabeca) {
     criaAlbum(cabeca);
     exibe("Album criado");
 }
-
+// chamada na main que ira vender um album
 void venderAlbum(Tcabeca *cabeca) {
     if(!cabeca) {
         exibe("Programa nao inicializado");
@@ -293,6 +294,7 @@ void venderAlbum(Tcabeca *cabeca) {
     }
     int k;
     Talbum *album;
+    // pergunta qual album deseja vender/desalocar
     do{
         album = cabeca->inicioAlb;
         printf("\nDigite qual album deseja vender: (Aperte -1 para voltar)\n");
@@ -304,7 +306,7 @@ void venderAlbum(Tcabeca *cabeca) {
     desalocaAlbum(cabeca, k);
     exibe("Album Vendido");
 }
-
+// desaloca da memoria um album
 void desalocaAlbum(Tcabeca *cabeca, int k) {
     Talbum *album = cabeca->inicioAlb, *auxAlb;
     k--;
@@ -312,6 +314,7 @@ void desalocaAlbum(Tcabeca *cabeca, int k) {
         album = album->proxAlb;
         k--;
     }
+    // desaloca as selecoes
     Tselecao *selecao = album->inicioSel, *auxSel;
     while(selecao) {
         auxSel = selecao;
@@ -322,7 +325,7 @@ void desalocaAlbum(Tcabeca *cabeca, int k) {
     }
     album->fimSel = album->inicioSel;
     cabeca->lucro = album->gastos;
-
+    // altera os ponteiros da cabeca e desaloca o album
     if(cabeca->inicioAlb == album) {
         if(cabeca->inicioAlb == cabeca->fimAlbum)
             cabeca->fimAlbum = album->proxAlb = cabeca->inicioAlb = NULL;
@@ -340,7 +343,7 @@ void desalocaAlbum(Tcabeca *cabeca, int k) {
     free(album);
     cabeca->qtdAlbuns--;
 }
-
+// desaloca da memoria uma selecao
 void desalocaSelecao(Tselecao *selecao) {
     Tfigurinha *figurinha = selecao->inicioFig, *aux;
     while(figurinha) {
@@ -350,7 +353,7 @@ void desalocaSelecao(Tselecao *selecao) {
         selecao->inicioFig = figurinha;
     }
 }
-
+// vende as figurinhas repetidas
 void venderFigurinhasRepetidas(Tcabeca *cabeca) {
     if(!cabeca) {
         exibe("Programa nao inicializado");
@@ -368,7 +371,7 @@ void venderFigurinhasRepetidas(Tcabeca *cabeca) {
     cabeca->fimFigRep = NULL;
     exibe("Figurinhas repetidas foram vendidas");
 }
-
+// ira mostrar os gastos
 void relatorioDeGastos(Tcabeca *cabeca) {
     if(!cabeca) {
         exibe("Programa nao inicializado");
@@ -383,7 +386,7 @@ void relatorioDeGastos(Tcabeca *cabeca) {
     printf("\nFigurinhas Repetidas: R$ %.2f\n",cabeca->gastosFigRep);
     printf("------------------------------\n");
 }
-
+// ira mostrar os lucros
 void relatorioDeLucros(Tcabeca *cabeca) {
     if(!cabeca) {
         exibe("Programa nao inicializado");
@@ -393,7 +396,7 @@ void relatorioDeLucros(Tcabeca *cabeca) {
     printf("\nLucro: R$ %.2f\n",cabeca->lucro);
     printf("--------------");
 }
-
+// chamada na main, ira preparar para o final do programa
 void sair(Tcabeca **cabeca, int *op) {
     *op = 0;
     if(!*cabeca) {
@@ -405,7 +408,7 @@ void sair(Tcabeca **cabeca, int *op) {
     char nomAlbum[20], aux[10] = "Album_", aux2[2];
     Talbum *album = (*cabeca)->inicioAlb;
     FILE *file = NULL;
-
+    // cria um novo arquivo para cada album
     while(album) {
         cod = album->codAlbum;
         *aux2 = cod + asciiTable;
@@ -423,7 +426,7 @@ void sair(Tcabeca **cabeca, int *op) {
         album = album->proxAlb;
         fclose(file);
     }
-
+    // cria um arqquivo para lucros e despesas
     file = fopen("lucros_e_despesas.txt","w");
     if(!file) {
         exibe("Erro ao criar o arquivo");
@@ -431,7 +434,7 @@ void sair(Tcabeca **cabeca, int *op) {
     }
     fprintf(file,"Lucros: R$ %.2lf\n\nDespesas: R$ %.2lf",(*cabeca)->lucro,despesas);
     fclose(file);
-
+    // cria um arqquivo para figurinhas repetidas
     file = fopen("figurinhas_repetidas.txt","w");
     if(!file) {
         exibe("Erro ao criar o arquivo");
@@ -441,10 +444,10 @@ void sair(Tcabeca **cabeca, int *op) {
     for(Tfigurinha *figRep = (*cabeca)->inicioFigRep;figRep;figRep = figRep->proxFig)
         fprintf(file,"\n%d %s %d %s",figRep->codSelecao, figRep->selecao, figRep->numJogador, figRep->nome);
     fclose(file);
-
+    // desaloca todos os albuns
     for(int i=(*cabeca)->qtdAlbuns;i>0;i--)
         desalocaAlbum(*cabeca,i);
-
+    // desaloca as figurinhas repetidas
     venderFigurinhasRepetidas(*cabeca);
     free(*cabeca);
     *cabeca = NULL;
@@ -452,7 +455,7 @@ void sair(Tcabeca **cabeca, int *op) {
     exibe("Programa Finalizado");
     printf("\n");
 }
-
+// imprime um album em um arquivo
 void imprimeAlbum(Talbum *album, FILE *file) {
     Tselecao *selecao = album->inicioSel;
     Tfigurinha *fig;
@@ -463,7 +466,7 @@ void imprimeAlbum(Talbum *album, FILE *file) {
         selecao = selecao->proxSel;
     }
 }
-
+// compra um novo pacote de figurinhas
 void comprarPacote(Tcabeca *cabeca) {
     if(!cabeca) {
         exibe("Programa nao inicializado");
@@ -474,30 +477,32 @@ void comprarPacote(Tcabeca *cabeca) {
     Tselecao *selecao;
     Tfigurinha *figurinha, *aux;
     int numSelecao, numJogador, extra, FLAG = 0;
+    // gera 5 figurinhas e aloca elas
     for(int i=0;i<5;i++) {
         numSelecao = rand() % 32 + 1;
         numJogador = rand() % 19 + 1;
         insereFig(cabeca, numSelecao, numJogador, 0);
     }
+    // gera uma possivel figurinhas extra
     extra = rand() % 190;
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Bordo");
     }
-    extra = rand() % 127;
+    extra = rand() % 127;  // 190 + 127 = 317
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Bronze");
     }
-    extra = rand() % 633;
+    extra = rand() % 633; // 190 + 127 + 633 = 950
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Prata");
     }
-    extra = rand() % 950;
+    extra = rand() % 950; // 190 + 127 + 633 + 950 = 1900
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
@@ -505,7 +510,7 @@ void comprarPacote(Tcabeca *cabeca) {
     }
     exibe("Pacote Comprado");
 }
-
+// insere uma figurinha em qualquer album
 void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]) {
     int auxSelecao, auxJogador, FLAG;
     char jogador[20];
@@ -524,7 +529,7 @@ void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]
         exibe("Erro na alocacao");
         return;
     }
-
+    // insere os dados na figurinha
     figurinha->codSelecao = auxSelecao;
     figurinha->numJogador = auxJogador;
     strcpy(figurinha->nome,jogador);
@@ -547,7 +552,7 @@ void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]
 
     if(!cabeca->inicioAlb)
         insereFigRep(cabeca,figurinha);
-
+    // insere a figurinha no album
     for(FLAG=0;album;album=album->proxAlb) {
         selecao = album->inicioSel;
         while(selecao->codSelecao != numSelecao)
@@ -596,7 +601,7 @@ void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]
             album->gastos += 0.8;
     }
 }
-
+// "printf mais bonito"
 void exibe(char s[]) {
     int n = strlen(s);
     printf("\n");
