@@ -31,7 +31,6 @@ typedef struct cabeca {
     Talbum *fimAlbum;
     double gastosFigRep, lucro;
     Tfigurinha *inicioFigRep;
-    Tfigurinha *fimFigRep;
     int qtdAlbuns;
 }Tcabeca;
 
@@ -98,7 +97,7 @@ void inicializacao(Tcabeca **cabeca) {
     // inicializa a cabeca
     (*cabeca)->gastosFigRep = (*cabeca)->lucro = (*cabeca)->qtdAlbuns = 0;
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb = NULL;
-    (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL;
+    (*cabeca)->inicioFigRep = NULL;
     criaAlbum(cabeca);
     (*cabeca)->inicioAlb->codAlbum = 1;
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb;
@@ -187,20 +186,14 @@ void entradaFigurinhas(Tcabeca **cabeca) {
 }
 // insere figurinhas na lista de repetidas
 void insereFigRep(Tcabeca *cabeca, Tfigurinha *figurinha) {
-    if(!cabeca->inicioFigRep) {
-        figurinha->proxFig = NULL;
-        cabeca->inicioFigRep = cabeca->fimFigRep = figurinha;
-    } else {
-        figurinha->proxFig = NULL;
-        cabeca->fimFigRep->proxFig = figurinha;
-        cabeca->fimFigRep = figurinha;
-    }
+    figurinha->proxFig = !cabeca->inicioFigRep ? NULL : cabeca->inicioFigRep;
+    cabeca->inicioFigRep = figurinha;
     cabeca->gastosFigRep += 0.8;
 }
 // transefere da lista de repetidas para um album
 void alocaFigRepNoAlbum(Tcabeca **cabeca) {
     int FLAG, count = 0;
-    Tfigurinha *figRep = (*cabeca)->inicioFigRep, *aux, *proxFig = figRep, *lista = NULL, *auxLista, *fimlista;
+    Tfigurinha *figRep = (*cabeca)->inicioFigRep, *aux, *proxFig = figRep, *lista = NULL, *auxLista;
     Tselecao *selecao;
     while(proxFig) {
         FLAG = 0;
@@ -245,7 +238,6 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
         }
     // cria uma nova lista para as figurinhas que nao foram inseridas nos albuns
         if(FLAG == 3) {
-            fimlista = figRep;
             count = 1;
             if(!lista) {
                 lista = figRep;
@@ -261,10 +253,9 @@ void alocaFigRepNoAlbum(Tcabeca **cabeca) {
         }
     // atualiza os ponteiros da cabeca para essa nova lista de repetidas
         if(!proxFig) {
-            (*cabeca)->fimFigRep = (*cabeca)->inicioFigRep = NULL; 
+            (*cabeca)->inicioFigRep = NULL; 
             if(count) {
                 (*cabeca)->inicioFigRep = lista;
-                (*cabeca)->fimFigRep = fimlista;
                 return;
             };
             break;
@@ -368,7 +359,6 @@ void venderFigurinhasRepetidas(Tcabeca *cabeca) {
         cabeca->lucro += 0.8;
         cabeca->gastosFigRep -= 0.8;
     }
-    cabeca->fimFigRep = NULL;
     exibe("Figurinhas repetidas foram vendidas");
 }
 // ira mostrar os gastos
