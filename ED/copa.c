@@ -283,18 +283,54 @@ void venderAlbum(Tcabeca *cabeca) {
         exibe("Nao existe album para vender");
         return;
     }
-    int k;
+    int k, FLAG = 0, i, aux;
     Talbum *album;
     // pergunta qual album deseja vender/desalocar
     do{
-        album = cabeca->inicioAlb;
-        printf("\nDigite qual album deseja vender: (Aperte -1 para voltar)\n");
-        for(int i=1;i<=cabeca->qtdAlbuns;i++,album=album->proxAlb)
-            printf("\t%d  -  Album %d\n",i,album->codAlbum);
+    for(album=cabeca->inicioAlb,FLAG=0;album;album=album->proxAlb)
+        FLAG = album->gastos >= 524 ? FLAG + 1 : FLAG;
+        printf("\n\nDigite qual album deseja vender: (Aperte -1 para voltar)\n");
+        if(FLAG)
+            printf("Albuns Completos:\n");
+        album=cabeca->inicioAlb;
+        for(i=1,k=FLAG,aux=FLAG;FLAG;album=album->proxAlb)
+            if(album->gastos >= 524) {
+                printf("\t%d  -  Album %d\n",i,album->codAlbum);
+                i++;
+                FLAG--;
+            }
+        if(k != cabeca->qtdAlbuns) {
+            printf("Albuns Incompletos:\n"); 
+            for(album = cabeca->inicioAlb;i<=cabeca->qtdAlbuns;album=album->proxAlb)
+                if(album->gastos <= 524) {
+                    printf("\t%d  -  Album %d\n",i,album->codAlbum);
+                    i++;
+                }
+        }
         scanf("%d",&k);
         if(k==-1) return;
-    }while(k<1 || k>cabeca->qtdAlbuns);
-    desalocaAlbum(cabeca, k);
+    }while(k<1 || k>i);
+    if(k<=aux)
+        for(i=1,aux=0,album=cabeca->inicioAlb;1;album=album->proxAlb,i++) {
+            if(album->gastos >= 524) {
+                aux++;
+                if(aux==k) {
+                    desalocaAlbum(cabeca, i);
+                    break;
+                }
+            }
+    } else {
+        for(k=k-aux,i=1,aux=0,album=cabeca->inicioAlb;1;i++,album=album->proxAlb) {
+            if(album->gastos <= 524) {
+                aux++;
+                if(aux==k) {
+                    desalocaAlbum(cabeca, i);
+                    break;
+                }
+            }
+        }
+    }
+
     exibe("Album Vendido");
 }
 // desaloca da memoria um album
