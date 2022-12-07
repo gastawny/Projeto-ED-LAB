@@ -53,6 +53,7 @@ void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]
 void exibe(char s[]);
 
 int main() {
+    srand(time(NULL));
     Tcabeca *cabeca = NULL;
     int op = 1;
 
@@ -99,8 +100,6 @@ void inicializacao(Tcabeca **cabeca) {
     (*cabeca)->fimAlbum = (*cabeca)->inicioAlb = NULL;
     (*cabeca)->inicioFigRep = NULL;
     criaAlbum(cabeca);
-    (*cabeca)->inicioAlb->codAlbum = 1;
-    (*cabeca)->fimAlbum = (*cabeca)->inicioAlb;
     entradaFigurinhas(cabeca);
     exibe("Programa inicializado");
 }
@@ -162,6 +161,9 @@ void criaAlbum(Tcabeca **cabeca) {
             aux = aux->proxAlb;
         (*cabeca)->fimAlbum->codAlbum = aux->codAlbum + 1;
         alocaFigRepNoAlbum(cabeca);
+    } else {
+        (*cabeca)->fimAlbum = (*cabeca)->inicioAlb;
+        (*cabeca)->fimAlbum->codAlbum = 1;
     }
     
     (*cabeca)->qtdAlbuns++;
@@ -386,16 +388,45 @@ void venderFigurinhasRepetidas(Tcabeca *cabeca) {
         exibe("Programa nao inicializado");
         return;
     }
-    Tfigurinha *figurinha = cabeca->inicioFigRep, *aux;
-    while(figurinha) {
-        aux = figurinha;
-        figurinha = figurinha->proxFig;
-        free(aux);
-        cabeca->inicioFigRep = figurinha;
-        cabeca->lucro += 0.8;
-        cabeca->gastosFigRep -= 0.8;
+    if(!cabeca->inicioFigRep) {
+        exibe("Nao possui figurinhas repetidas");
+        return;
     }
-    exibe("Figurinhas repetidas foram vendidas");
+    int i, k;
+    Tfigurinha *figurinha = cabeca->inicioFigRep, *aux;
+    do{
+        printf("\nEscolha uma opcao para vender as figurinhas repetidas: (-1 para voltar)\n\n");
+        for(figurinha=cabeca->inicioFigRep,i=0;figurinha;figurinha=figurinha->proxFig,i++)
+            printf("%d - %d %s %d %s\n",i,figurinha->codSelecao,figurinha->selecao,figurinha->numJogador,figurinha->nome);
+        printf("%d - vender todas\n",i);
+        scanf("%d",&k);
+        if(k == -1) return;
+    }while(k<0 || k>i);
+    if(k == i) {
+        figurinha=cabeca->inicioFigRep;
+        while(figurinha) {
+            aux = figurinha;
+            figurinha = figurinha->proxFig;
+            free(aux);
+            cabeca->inicioFigRep = figurinha;
+            cabeca->lucro += 0.8;
+            cabeca->gastosFigRep -= 0.8;
+        }
+        exibe("Figurinhas repetidas foram vendidas");
+        return;
+    }
+    cabeca->lucro += 0.8;
+    cabeca->gastosFigRep -= 0.8;
+    if(!k) {
+        aux = cabeca->inicioFigRep;
+        cabeca->inicioFigRep = cabeca->inicioFigRep->proxFig;
+        free(aux);
+        return;
+    }
+    for(figurinha=cabeca->inicioFigRep;k-1;k--,figurinha=figurinha->proxFig);
+    aux = figurinha->proxFig;
+    figurinha->proxFig = figurinha->proxFig->proxFig;
+    free(aux);
 }
 // ira mostrar os gastos
 void relatorioDeGastos(Tcabeca *cabeca) {
@@ -474,7 +505,13 @@ void sair(Tcabeca **cabeca, int *op) {
     for(int i=(*cabeca)->qtdAlbuns;i>0;i--)
         desalocaAlbum(*cabeca,i);
     // desaloca as figurinhas repetidas
-    venderFigurinhasRepetidas(*cabeca);
+    for(Tfigurinha *aux;(*cabeca)->inicioFigRep;) {
+            aux = (*cabeca)->inicioFigRep;
+            (*cabeca)->inicioFigRep = (*cabeca)->inicioFigRep->proxFig;
+            free(aux);
+            (*cabeca)->lucro += 0.8;
+            (*cabeca)->gastosFigRep -= 0.8;
+        }
     free(*cabeca);
     *cabeca = NULL;
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -498,7 +535,6 @@ void comprarPacote(Tcabeca *cabeca) {
         exibe("Programa nao inicializado");
         return;
     }
-    srand(time(NULL)*cabeca->gastosFigRep);
     Talbum *album = cabeca->inicioAlb;
     Tselecao *selecao;
     Tfigurinha *figurinha, *aux;
@@ -516,19 +552,19 @@ void comprarPacote(Tcabeca *cabeca) {
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Bordo");
     }
-    extra = rand() % 127;  // 190 + 127 = 317
+    extra = rand() % 317;
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Bronze");
     }
-    extra = rand() % 633; // 190 + 127 + 633 = 950
+    extra = rand() % 950;
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
         insereFig(cabeca, extra, 20, "Prata");
     }
-    extra = rand() % 950; // 190 + 127 + 633 + 950 = 1900
+    extra = rand() % 1900;
     if(!extra && !FLAG) {
         FLAG = 1;
         extra = rand() % 32 + 1;
@@ -625,6 +661,8 @@ void insereFig(Tcabeca *cabeca, int numSelecao, int numJogador, char tipoExtra[]
         }
         if(FLAG != 3)
             album->gastos += 0.8;
+        if(tipoExtra)
+            album->gastos -= 0.8;
     }
 }
 // "printf mais bonito"
